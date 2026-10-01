@@ -1,0 +1,10 @@
+.git
+.gitignore
+.agents
+frontend/node_modules
+frontend/dist
+backend/*.exe
+backend/*.o
+backend/*.dll
+backend/*.db.bak
+*.log

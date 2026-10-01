@@ -1,0 +1,29 @@
+# Render Blueprint Specification
+# Deploys Unified Frontend + C++ Backend + SQLite as a single Web Service
+services:
+  - type: web
+    name: smart-event-management
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: WEB_DIR
+        value: /app/public
+      - key: SCHEMA_PATH
+        value: /app/schema.sql
+      - key: DATABASE_PATH
+        value: /app/event_system.db
+
+    # Optional: If you upgrade to a paid plan on Render and want persistent SQLite storage across redeploys:
+    # disk:
+    #   name: sqlite-storage
+    #   mountPath: /data
+    #   sizeGB: 1
+    # envVars:
+    #   - key: DATABASE_PATH
+    #     value: /data/event_system.db

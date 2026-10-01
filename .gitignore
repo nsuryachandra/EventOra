@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+
+# Frontend builds
+frontend/dist/
+
+# Backend compiled binaries and objects
+backend/*.exe
+backend/*.o
+backend/*.dll
+backend/*.db.bak
+
+# OS metadata
+.DS_Store
+Thumbs.db
+*.log
+.vscode/
+.idea/
