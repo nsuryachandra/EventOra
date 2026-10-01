@@ -25,9 +25,9 @@ WORKDIR /app/backend
 
 COPY backend/ ./
 
-# Compile SQLite amalgamation and link C++ server
+# Compile SQLite amalgamation and link C++ server statically with libstdc++
 RUN gcc -O2 -c third_party/sqlite/sqlite3.c -o sqlite3.o && \
-    g++ -std=c++17 -Wall -O2 main.cpp database.cpp sqlite3.o -Ithird_party -pthread -ldl -o server
+    g++ -std=c++17 -Wall -O2 main.cpp database.cpp sqlite3.o -Ithird_party -pthread -ldl -static-libstdc++ -static-libgcc -o server
 
 # ------------------------------------------------------------------------------
 # Stage 3: Minimal Production Runtime
