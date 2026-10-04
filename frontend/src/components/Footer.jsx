@@ -39,9 +39,9 @@ export const Footer = () => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                background: 'linear-gradient(135deg, rgba(236, 253, 245, 0.95) 0%, rgba(254, 243, 199, 0.95) 100%)',
-                border: '1px solid rgba(16, 185, 129, 0.25)',
-                boxShadow: '0 2px 8px rgba(5, 150, 105, 0.15)',
+                background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #eff6ff 100%)',
+                border: '1px solid rgba(14, 165, 233, 0.3)',
+                boxShadow: '0 2px 10px rgba(2, 132, 199, 0.16)',
                 padding: 4,
                 flexShrink: 0,
               }}
@@ -56,7 +56,7 @@ export const Footer = () => {
                     fontWeight: 900,
                     fontSize: '1.15rem',
                     letterSpacing: '0.03em',
-                    background: 'linear-gradient(135deg, #064e3b 0%, #047857 50%, #0d9488 100%)',
+                    background: 'linear-gradient(135deg, #0f172a 0%, #1e3a8a 55%, #1d4ed8 100%)',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
                   }}
@@ -69,7 +69,7 @@ export const Footer = () => {
                     fontWeight: 900,
                     fontSize: '1.15rem',
                     letterSpacing: '0.03em',
-                    background: 'linear-gradient(135deg, #b45309 0%, #d97706 40%, #f59e0b 100%)',
+                    background: 'linear-gradient(135deg, #0284c7 0%, #0ea5e9 50%, #38bdf8 100%)',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
                   }}

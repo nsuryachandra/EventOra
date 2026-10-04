@@ -112,6 +112,7 @@ export const api = {
 
   // Organizer Resources
   getResources: (eventId) => request(`/resources${eventId ? `?eventId=${eventId}` : ''}`),
+  getResource: (id) => request(`/resources/${id}`),
   createResource: (payload) => 
     request('/resources', {
       method: 'POST',

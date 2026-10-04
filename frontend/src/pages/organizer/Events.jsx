@@ -32,7 +32,8 @@ const CATEGORIES = [
   'Artificial Intelligence',
   'Cloud Computing',
   'Cybersecurity',
-  'Design & Product'
+  'Design & Product',
+  'Others'
 ];
 
 const IMAGE_PRESETS = [
@@ -41,6 +42,9 @@ const IMAGE_PRESETS = [
   { label: 'Cloud Systems', url: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80' },
   { label: 'Cybersecurity', url: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1200&q=80' },
   { label: 'Coding Lab', url: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=1200&q=80' },
+  { label: 'NGO & Community', url: 'https://images.unsplash.com/photo-1559027615-cd4628902d4a?auto=format&fit=crop&w=1200&q=80' },
+  { label: 'Cleaning / Eco', url: 'https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?auto=format&fit=crop&w=1200&q=80' },
+  { label: 'Games & Sports', url: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1200&q=80' },
 ];
 
 const getCategoryGradient = (category) => {
@@ -53,6 +57,15 @@ const getCategoryGradient = (category) => {
   }
   if (cat.includes('cyber') || cat.includes('hack') || cat.includes('fintech')) {
     return 'linear-gradient(135deg, #4c0519 0%, #881337 45%, #0f172a 100%)';
+  }
+  if (cat.includes('ngo') || cat.includes('charity') || cat.includes('social') || cat.includes('community')) {
+    return 'linear-gradient(135deg, #064e3b 0%, #047857 45%, #0f172a 100%)';
+  }
+  if (cat.includes('clean') || cat.includes('eco') || cat.includes('green') || cat.includes('waste')) {
+    return 'linear-gradient(135deg, #0e7490 0%, #0284c7 45%, #0f172a 100%)';
+  }
+  if (cat.includes('game') || cat.includes('sport') || cat.includes('play') || cat.includes('esport')) {
+    return 'linear-gradient(135deg, #581c87 0%, #7e22ce 45%, #0f172a 100%)';
   }
   return 'linear-gradient(135deg, #1e1b4b 0%, #312e81 45%, #0f172a 100%)';
 };
@@ -72,6 +85,7 @@ export const Events = () => {
   const [newDate, setNewDate] = useState('');
   const [newVenue, setNewVenue] = useState('');
   const [newCategory, setNewCategory] = useState('Technology');
+  const [customCategory, setCustomCategory] = useState('');
   const [newCapacity, setNewCapacity] = useState(50);
   const [newResourceName, setNewResourceName] = useState('');
   const [newResourceQuantity, setNewResourceQuantity] = useState(50);
@@ -87,6 +101,7 @@ export const Events = () => {
   const [editDate, setEditDate] = useState('');
   const [editVenue, setEditVenue] = useState('');
   const [editCategory, setEditCategory] = useState('Technology');
+  const [editCustomCategory, setEditCustomCategory] = useState('');
   const [editCapacity, setEditCapacity] = useState(50);
   const [editImageUrl, setEditImageUrl] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
@@ -131,7 +146,14 @@ export const Events = () => {
     setEditDescription(ev.description || '');
     setEditDate(ev.date || '');
     setEditVenue(ev.venue || '');
-    setEditCategory(ev.category || 'Technology');
+    const standard = ['Technology', 'Artificial Intelligence', 'Cloud Computing', 'Cybersecurity', 'Design & Product'];
+    if (standard.includes(ev.category)) {
+      setEditCategory(ev.category);
+      setEditCustomCategory('');
+    } else {
+      setEditCategory('Others');
+      setEditCustomCategory(ev.category || '');
+    }
     setEditCapacity(ev.totalCapacity || 50);
     setEditImageUrl(ev.imageUrl || '');
     setShowEditModal(true);
@@ -177,6 +199,8 @@ export const Events = () => {
       return;
     }
 
+    const finalCat = editCategory === 'Others' ? (editCustomCategory.trim() || 'Others') : editCategory.trim();
+
     setIsUpdating(true);
     try {
       const res = await api.updateEvent(editingEvent.id, {
@@ -185,7 +209,7 @@ export const Events = () => {
         description: editDescription.trim(),
         date: editDate.trim(),
         venue: editVenue.trim(),
-        category: editCategory.trim(),
+        category: finalCat,
         capacity: cap,
         imageUrl: editImageUrl.trim(),
       });
@@ -211,11 +235,18 @@ export const Events = () => {
       return;
     }
 
+    if (newCategory === 'Others' && !customCategory.trim()) {
+      showToast('Please specify the category (e.g. NGO, Cleaning, Games).', 'error');
+      return;
+    }
+
     const cap = parseInt(newCapacity, 10);
     if (isNaN(cap) || cap < 1) {
       showToast('Please enter a valid capacity (minimum 1).', 'error');
       return;
     }
+
+    const finalCat = newCategory === 'Others' ? customCategory.trim() : newCategory.trim();
 
     setIsCreating(true);
     try {
@@ -225,7 +256,7 @@ export const Events = () => {
         description: newDescription.trim() || 'Interactive event session.',
         date: newDate.trim(),
         venue: newVenue.trim(),
-        category: newCategory.trim(),
+        category: finalCat,
         capacity: cap,
         resourceName: newResourceName.trim() || `${newTitle.trim()} - Badges & Kits`,
         resourceQuantity: parseInt(newResourceQuantity, 10) || cap,
@@ -240,6 +271,8 @@ export const Events = () => {
         setNewDescription('');
         setNewDate('');
         setNewVenue('');
+        setNewCategory('Technology');
+        setCustomCategory('');
         setNewCapacity(50);
         setNewResourceName('');
         setNewResourceQuantity(50);
@@ -255,10 +288,22 @@ export const Events = () => {
     }
   };
 
+  const standardCats = ['Technology', 'Artificial Intelligence', 'Cloud Computing', 'Cybersecurity', 'Design & Product'];
+  const allFilterCategories = [
+    'All',
+    ...new Set([
+      ...CATEGORIES.filter((c) => c !== 'All' && c !== 'Others'),
+      ...events.map((e) => e.category).filter(Boolean),
+      'Others'
+    ])
+  ];
+
   const filteredEvents = events.filter((ev) => {
     const matchesSearch = (ev.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          (ev.venue || '').toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === 'All' || ev.category === selectedCategory;
+                          (ev.venue || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          (ev.category || '').toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = selectedCategory === 'All' || 
+      (selectedCategory === 'Others' ? (!standardCats.includes(ev.category) || ev.category === 'Others') : ev.category === selectedCategory);
     return matchesSearch && matchesCategory;
   });
 
@@ -348,7 +393,7 @@ export const Events = () => {
       >
         {/* Category Tabs */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-          {CATEGORIES.map((cat) => (
+          {allFilterCategories.map((cat) => (
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
@@ -665,7 +710,29 @@ export const Events = () => {
                   <option value="Cloud Computing">Cloud Computing</option>
                   <option value="Cybersecurity">Cybersecurity</option>
                   <option value="Design & Product">Design & Product</option>
+                  <option value="Others">Others (Custom Category)</option>
                 </select>
+
+                {newCategory === 'Others' && (
+                  <div style={{ marginTop: 8, animation: 'fadeIn 0.2s ease' }}>
+                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, marginBottom: 4, color: '#4f46e5' }}>
+                      Specify Category * (e.g. NGO, Cleaning, Games, Sports, Charity)
+                    </label>
+                    <input
+                      type="text"
+                      value={customCategory}
+                      onChange={(e) => setCustomCategory(e.target.value)}
+                      placeholder="e.g. NGO, Cleaning, Games..."
+                      required
+                      autoFocus
+                      style={{
+                        borderColor: '#818cf8',
+                        backgroundColor: '#f8fafc',
+                        boxShadow: '0 0 0 2px rgba(99, 102, 241, 0.1)',
+                      }}
+                    />
+                  </div>
+                )}
               </div>
             </div>
 
@@ -949,6 +1016,43 @@ export const Events = () => {
                 onChange={(e) => setEditVenue(e.target.value)}
                 required
               />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, marginBottom: 5, color: '#334155' }}>
+                Category
+              </label>
+              <select
+                value={editCategory}
+                onChange={(e) => setEditCategory(e.target.value)}
+              >
+                <option value="Technology">Technology</option>
+                <option value="Artificial Intelligence">Artificial Intelligence</option>
+                <option value="Cloud Computing">Cloud Computing</option>
+                <option value="Cybersecurity">Cybersecurity</option>
+                <option value="Design & Product">Design & Product</option>
+                <option value="Others">Others (Custom Category)</option>
+              </select>
+
+              {editCategory === 'Others' && (
+                <div style={{ marginTop: 8, animation: 'fadeIn 0.2s ease' }}>
+                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, marginBottom: 4, color: '#4f46e5' }}>
+                    Specify Category * (e.g. NGO, Cleaning, Games, Sports, Charity)
+                  </label>
+                  <input
+                    type="text"
+                    value={editCustomCategory}
+                    onChange={(e) => setEditCustomCategory(e.target.value)}
+                    placeholder="e.g. NGO, Cleaning, Games..."
+                    required
+                    style={{
+                      borderColor: '#818cf8',
+                      backgroundColor: '#f8fafc',
+                      boxShadow: '0 0 0 2px rgba(99, 102, 241, 0.1)',
+                    }}
+                  />
+                </div>
+              )}
             </div>
 
             {/* Top Cover Banner Image Section (Edit) */}

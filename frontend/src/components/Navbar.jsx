@@ -42,9 +42,9 @@ export const Navbar = () => {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 4px 14px rgba(5, 150, 105, 0.16)',
-              border: '1px solid rgba(16, 185, 129, 0.25)',
-              background: 'linear-gradient(135deg, rgba(236, 253, 245, 0.95) 0%, rgba(254, 243, 199, 0.95) 100%)',
+              boxShadow: '0 4px 14px rgba(2, 132, 199, 0.18)',
+              border: '1px solid rgba(14, 165, 233, 0.3)',
+              background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #eff6ff 100%)',
               flexShrink: 0,
               padding: 4,
               transition: 'transform 0.2s ease, box-shadow 0.2s ease',
@@ -58,7 +58,7 @@ export const Navbar = () => {
                 height: '100%',
                 objectFit: 'contain',
                 display: 'block',
-                filter: 'drop-shadow(0 2px 4px rgba(5, 150, 105, 0.25))',
+                filter: 'drop-shadow(0 2px 5px rgba(2, 132, 199, 0.35))',
               }}
             />
           </div>
@@ -70,7 +70,7 @@ export const Navbar = () => {
                   fontWeight: 900,
                   fontSize: '1.42rem',
                   letterSpacing: '0.04em',
-                  background: 'linear-gradient(135deg, #064e3b 0%, #047857 50%, #0d9488 100%)',
+                  background: 'linear-gradient(135deg, #0f172a 0%, #1e3a8a 55%, #1d4ed8 100%)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                 }}
@@ -83,7 +83,7 @@ export const Navbar = () => {
                   fontWeight: 900,
                   fontSize: '1.42rem',
                   letterSpacing: '0.04em',
-                  background: 'linear-gradient(135deg, #b45309 0%, #d97706 40%, #f59e0b 100%)',
+                  background: 'linear-gradient(135deg, #0284c7 0%, #0ea5e9 50%, #38bdf8 100%)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                 }}
@@ -96,13 +96,13 @@ export const Navbar = () => {
                 fontSize: '0.68rem',
                 color: '#64748b',
                 fontWeight: 650,
-                letterSpacing: '0.04em',
+                letterSpacing: '0.05em',
                 textTransform: 'uppercase',
                 marginTop: 3,
                 fontFamily: 'var(--font-sans)',
               }}
             >
-              Crowd Admissions & Event Management
+              Smart Event Management System
             </div>
           </div>
         </Link>

@@ -582,7 +582,7 @@ export const WebsiteOpeningAnimation = ({ onComplete }) => {
               width: 'min(380px, 72vw)',
               height: 'min(380px, 72vw)',
               borderRadius: '50%',
-              background: 'radial-gradient(circle, rgba(16, 185, 129, 0.28) 0%, rgba(245, 158, 11, 0.20) 40%, rgba(99, 102, 241, 0.12) 65%, transparent 80%)',
+              background: 'radial-gradient(circle, rgba(14, 165, 233, 0.35) 0%, rgba(79, 70, 229, 0.22) 40%, rgba(2, 132, 199, 0.12) 65%, transparent 80%)',
               filter: `blur(${stage === 2 ? '46px' : isAccelerating ? '38px' : '28px'})`,
               transform: stage === 2 ? 'scale(1.3)' : isAccelerating ? 'scale(1.15)' : 'scale(1)',
               transition: 'transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), filter 0.4s ease',
@@ -602,7 +602,7 @@ export const WebsiteOpeningAnimation = ({ onComplete }) => {
               position: 'relative',
               zIndex: 2,
               imageRendering: 'high-quality',
-              filter: `drop-shadow(0 14px 28px rgba(5, 150, 105, 0.22)) drop-shadow(0 20px 42px rgba(217, 119, 6, 0.18))`,
+              filter: `drop-shadow(0 14px 32px rgba(2, 132, 199, 0.35)) drop-shadow(0 20px 48px rgba(79, 70, 229, 0.28))`,
               transition: 'filter 0.3s cubic-bezier(0.22, 1, 0.36, 1)',
             }}
           />
@@ -630,14 +630,14 @@ export const WebsiteOpeningAnimation = ({ onComplete }) => {
               lineHeight: 1,
               userSelect: 'none',
               filter: isAccelerating
-                ? 'drop-shadow(0 0 24px rgba(16, 185, 129, 0.45)) drop-shadow(0 0 32px rgba(245, 158, 11, 0.35))'
-                : 'drop-shadow(0 4px 14px rgba(5, 150, 105, 0.20)) drop-shadow(0 6px 18px rgba(217, 119, 6, 0.16))',
+                ? 'drop-shadow(0 0 28px rgba(14, 165, 233, 0.55)) drop-shadow(0 0 36px rgba(79, 70, 229, 0.45))'
+                : 'drop-shadow(0 4px 16px rgba(2, 132, 199, 0.25)) drop-shadow(0 6px 22px rgba(79, 70, 229, 0.20))',
               transition: 'filter 0.3s ease',
             }}
           >
             <span
               style={{
-                background: 'linear-gradient(135deg, #064e3b 0%, #047857 45%, #059669 80%, #10b981 100%)',
+                background: 'linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #2563eb 80%, #3b82f6 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
               }}
@@ -646,7 +646,7 @@ export const WebsiteOpeningAnimation = ({ onComplete }) => {
             </span>
             <span
               style={{
-                background: 'linear-gradient(135deg, #92400e 0%, #b45309 30%, #d97706 65%, #f59e0b 100%)',
+                background: 'linear-gradient(135deg, #0284c7 0%, #0ea5e9 40%, #38bdf8 80%, #7dd3fc 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
               }}

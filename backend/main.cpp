@@ -300,26 +300,30 @@ int getWaitingPosition(int attendeeId, int eventId = 0) {
 // 6. BUSINESS LOGIC & RESOURCE AUTO-SYNC
 // ==============================================================================
 
-void autoAllocateResourceForEvent(int eventId) {
+void syncResourceAllocationsForEvent(int eventId) {
+    int confirmedCount = 0;
+    for (int a = 0; a < attendeeCount; ++a) {
+        if (attendees[a].eventId == eventId && attendees[a].status == "ADMITTED") {
+            confirmedCount++;
+        }
+    }
     for (int i = 0; i < resourceCount; ++i) {
         if (resources[i].eventId == eventId) {
-            if (resources[i].allocated < resources[i].total) {
-                resources[i].allocated++;
+            int correctAllocated = std::min(resources[i].total, confirmedCount);
+            if (resources[i].allocated != correctAllocated) {
+                resources[i].allocated = correctAllocated;
                 dbUpdateResource(resources[i]);
             }
         }
     }
 }
 
+void autoAllocateResourceForEvent(int eventId) {
+    syncResourceAllocationsForEvent(eventId);
+}
+
 void autoReleaseResourceForEvent(int eventId) {
-    for (int i = 0; i < resourceCount; ++i) {
-        if (resources[i].eventId == eventId) {
-            if (resources[i].allocated > 0) {
-                resources[i].allocated--;
-                dbUpdateResource(resources[i]);
-            }
-        }
-    }
+    syncResourceAllocationsForEvent(eventId);
 }
 
 bool processRegistration(int eventId, const std::string& name, const std::string& email, const std::string& phone, 
@@ -773,6 +777,37 @@ json resourceToJson(const Resource& r) {
     j["total"] = r.total;
     j["allocated"] = r.allocated;
     j["available"] = (r.total >= r.allocated) ? (r.total - r.allocated) : 0;
+
+    int evIdx = findEventById(events, eventCount, r.eventId);
+    if (evIdx != -1) {
+        j["eventTitle"] = events[evIdx].title;
+    } else {
+        j["eventTitle"] = "Event #" + std::to_string(r.eventId);
+    }
+
+    int confirmedCount = 0;
+    json allocatedAttendees = json::array();
+    json unallocatedAttendees = json::array();
+
+    for (int i = 0; i < attendeeCount; ++i) {
+        if (attendees[i].eventId == r.eventId && attendees[i].status == "ADMITTED") {
+            confirmedCount++;
+            json attJson = attendeeToJson(attendees[i]);
+            if (confirmedCount <= r.allocated) {
+                attJson["allocationStatus"] = "ALLOCATED";
+                allocatedAttendees.push_back(attJson);
+            } else {
+                attJson["allocationStatus"] = "DEFICIT_PENDING";
+                unallocatedAttendees.push_back(attJson);
+            }
+        }
+    }
+
+    j["confirmedCount"] = confirmedCount;
+    int neededMore = (confirmedCount > r.allocated) ? (confirmedCount - r.allocated) : 0;
+    j["neededMore"] = neededMore;
+    j["allocatedAttendees"] = allocatedAttendees;
+    j["unallocatedAttendees"] = unallocatedAttendees;
     return j;
 }
 
@@ -1208,6 +1243,9 @@ void registerRoutes(httplib::Server& svr) {
                     if (autoAdmittedCount > 0) autoAdmittedNames += ", ";
                     autoAdmittedNames += admitted.name;
                     autoAdmittedCount++;
+                }
+                if (autoAdmittedCount > 0) {
+                    syncResourceAllocationsForEvent(sections[idx].eventId);
                 }
             }
 
@@ -1708,6 +1746,13 @@ void registerRoutes(httplib::Server& svr) {
     // GET /api/resources
     svr.Get("/api/resources", [](const httplib::Request& req, httplib::Response& res) {
         int eventId = req.has_param("eventId") ? std::stoi(req.get_param_value("eventId")) : 0;
+        if (eventId > 0) {
+            syncResourceAllocationsForEvent(eventId);
+        } else {
+            for (int e = 0; e < eventCount; ++e) {
+                syncResourceAllocationsForEvent(events[e].id);
+            }
+        }
         json arr = json::array();
         for (int i = 0; i < resourceCount; ++i) {
             if (eventId == 0 || resources[i].eventId == eventId) {
@@ -1715,6 +1760,18 @@ void registerRoutes(httplib::Server& svr) {
             }
         }
         sendJsonResponse(res, 200, true, "Resources list", arr);
+    });
+
+    // GET /api/resources/:id
+    svr.Get(R"(/api/resources/(\d+))", [](const httplib::Request& req, httplib::Response& res) {
+        int id = std::stoi(req.matches[1]);
+        int idx = findResourceById(resources, resourceCount, id);
+        if (idx == -1) {
+            sendJsonResponse(res, 404, false, "Resource not found.");
+            return;
+        }
+        syncResourceAllocationsForEvent(resources[idx].eventId);
+        sendJsonResponse(res, 200, true, "Resource details", resourceToJson(resources[idx]));
     });
 
     // POST /api/resources
@@ -1731,12 +1788,20 @@ void registerRoutes(httplib::Server& svr) {
                 return;
             }
 
+            // Count existing confirmed attendees for this event
+            int confirmedCount = 0;
+            for (int a = 0; a < attendeeCount; ++a) {
+                if (attendees[a].eventId == eventId && attendees[a].status == "ADMITTED") {
+                    confirmedCount++;
+                }
+            }
+
             Resource r;
             r.eventId = eventId;
             r.name = name;
             r.category = category;
             r.total = total;
-            r.allocated = 0;
+            r.allocated = std::min(r.total, confirmedCount);
 
             if (!dbInsertResource(r)) {
                 sendJsonResponse(res, 500, false, "Database error creating resource.");
@@ -1744,7 +1809,11 @@ void registerRoutes(httplib::Server& svr) {
             }
 
             addResourceToArray(resources, resourceCount, r);
-            logActivity(activities, activityCount, eventId, "Added resource '" + name + "' (" + category + ") with total " + std::to_string(total) + ".");
+            std::string logMsg = "Added resource '" + name + "' (" + category + ") with total " + std::to_string(total) + ".";
+            if (r.allocated > 0) {
+                logMsg += " Auto-assigned " + std::to_string(r.allocated) + " units to confirmed attendees.";
+            }
+            logActivity(activities, activityCount, eventId, logMsg);
 
             sendJsonResponse(res, 201, true, "Resource created.", resourceToJson(r));
         } catch (...) {
@@ -1802,19 +1871,32 @@ void registerRoutes(httplib::Server& svr) {
                 std::string newCat = body.value("category", resources[idx].category);
                 int newTotal = body.value("total", resources[idx].total);
 
-                if (newTotal < resources[idx].allocated) {
-                    sendJsonResponse(res, 400, false, "Total cannot be less than currently allocated units (" + 
-                                     std::to_string(resources[idx].allocated) + ").");
+                if (newTotal < 0) {
+                    sendJsonResponse(res, 400, false, "Total pool units must be at least 0.");
                     return;
                 }
 
+                int prevAllocated = resources[idx].allocated;
                 resources[idx].name = newName;
                 resources[idx].category = newCat;
                 resources[idx].total = newTotal;
                 dbUpdateResource(resources[idx]);
 
-                logActivity(activities, activityCount, resources[idx].eventId, "Updated resource details for '" + newName + "'.");
-                sendJsonResponse(res, 200, true, "Resource updated successfully.", resourceToJson(resources[idx]));
+                // Auto-assign to persons who are booked confirmed but not yet allocated!
+                syncResourceAllocationsForEvent(resources[idx].eventId);
+
+                int newlyAssigned = resources[idx].allocated - prevAllocated;
+                std::string logMsg = "Updated resource details for '" + newName + "' (Total: " + std::to_string(newTotal) + ").";
+                if (newlyAssigned > 0) {
+                    logMsg += " Auto-assigned " + std::to_string(newlyAssigned) + " units to confirmed attendees.";
+                }
+                logActivity(activities, activityCount, resources[idx].eventId, logMsg);
+
+                std::string successMsg = "Resource updated successfully.";
+                if (newlyAssigned > 0) {
+                    successMsg += " Auto-assigned to " + std::to_string(newlyAssigned) + " confirmed guest(s) previously lacking stock.";
+                }
+                sendJsonResponse(res, 200, true, successMsg, resourceToJson(resources[idx]));
                 return;
             }
         } catch (...) {
@@ -1831,18 +1913,13 @@ void registerRoutes(httplib::Server& svr) {
             return;
         }
 
-        if (resources[idx].allocated > 0) {
-            sendJsonResponse(res, 400, false, "Cannot delete resource '" + resources[idx].name + "' while " + 
-                             std::to_string(resources[idx].allocated) + " units are allocated.");
-            return;
-        }
-
         std::string rName = resources[idx].name;
         int evId = resources[idx].eventId;
+        int prevAlloc = resources[idx].allocated;
         dbDeleteResource(id);
         removeResourceFromArray(resources, resourceCount, idx);
 
-        logActivity(activities, activityCount, evId, "Resource '" + rName + "' was deleted.");
+        logActivity(activities, activityCount, evId, "Resource '" + rName + "' was deleted (" + std::to_string(prevAlloc) + " allocations released).");
         sendJsonResponse(res, 200, true, "Resource deleted successfully.");
     });
 
@@ -1975,6 +2052,11 @@ int main() {
         }
     }
     std::cout << "[FIFO Queue] Reconstructed circular queue with " << queueCount << " waiting attendees." << std::endl;
+
+    // Synchronize all resource allocations with confirmed attendees
+    for (int e = 0; e < eventCount; ++e) {
+        syncResourceAllocationsForEvent(events[e].id);
+    }
 
     // 4. Setup HTTP Server and Routes
     httplib::Server svr;
